@@ -22,6 +22,12 @@ To start TorMon, you can use docker-compose
 
     docker-compose up -d
 
+If you don't want to use docker, make sure you have python3 and then:
+
+    cd src/
+    python3 -m pip install -r requirements.txt
+    ./tormon.py  # run that in tmux or equivalent
+
 The Influxdb database will be created if it does not exists.
 
 At that point, in Grafana, create a __datasource__ of type InfluxDB to point to the new InfluxDB database.
