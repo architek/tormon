@@ -1,0 +1,11 @@
+version: "3.9"
+services:
+  tormon:
+    build: .
+    container_name: tormon
+    network_mode: host
+    env_file: 
+      - .env.container
+      - .env.torid
+    volumes:
+      - ./src:/usr/app/src
