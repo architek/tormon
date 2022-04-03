@@ -36,6 +36,10 @@ __Make sure to not expose your Tor control endpoint!__
 
 TorMon does not use tor controler async features, it relies on several threads polling the controler.
 
+You can follow TorMon output with
+
+    docker-compose logs -f
+
 ## Screenshot
 
 ![2022-04-03-181417_1920x1080_scrot](https://user-images.githubusercontent.com/490053/161437463-cd96d47a-1388-4d8c-88e2-87784475e396.png)
