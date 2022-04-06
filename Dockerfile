@@ -1,11 +1,11 @@
 FROM python:3.9-alpine
 LABEL Maintainer="architek"
 
-WORKDIR /usr/app/src
-COPY src/* /usr/app/src/
-
 RUN adduser -D user
 USER user
+
+WORKDIR /usr/app/src
+COPY src/* .
 
 RUN pip install -r requirements.txt
 ENV PYTHONUNBUFFERED=1

@@ -135,7 +135,7 @@ def high_event():
 @schedule(60)
 def mid_event():
     fields = {
-        "idormant":          getinfo("dormant"),
+        "idormant":         getinfo("dormant"),
         "liveness":         getinfo("network-liveness"),
     }
     to_influx("stats", fields)
