@@ -18,11 +18,12 @@ influx_client = None
 influx_host     = os.getenv("INFLUX_HOST")
 influx_port     = int(os.getenv("INFLUX_PORT"))
 db_name         = os.getenv("INFLUX_DB")
-m_tags          = {"host": os.getenv("TAG_HOST")}
-fp              = os.getenv("TOR_FP")
 torcontrol_host = os.getenv("TORCONTROL_HOST")
 torcontrol_port = int(os.getenv("TORCONTROL_PORT"))
 torcontrol_pass = os.getenv("TORCONTROL_PASSWORD")
+fp              = os.getenv("TOR_FP")
+m_tags          = {"host": os.getenv("TAG_HOST")}
+
 
 def masync(func):
     @wraps(func)
@@ -48,6 +49,7 @@ def schedule(interval):
         return wrap
     return decorator
 
+
 def tor2influx(measurement):
     def decorator(func):
         @wraps(func)
@@ -60,6 +62,7 @@ def tor2influx(measurement):
                 to_influx(measurement,fields)
         return wrap
     return decorator
+
 
 def get_flags(s):
     res = re.findall("s (.*)\n", s)
@@ -85,8 +88,10 @@ def get_currenc_tags():
 def get_time():
     return datetime.datetime.utcnow().isoformat()[:-3] + 'Z'
 
+
 def tor_auth():
     tor_controller.authenticate(password=torcontrol_pass)
+
 
 def getinfo(query):
     """
@@ -114,6 +119,7 @@ def getinfo(query):
 
     return res
 
+
 def to_influx(measurement, fields):
     tags = m_tags or get_currenc_tags()
     data = [{
@@ -128,6 +134,7 @@ def to_influx(measurement, fields):
     except BaseException as e:
         print(f"Couldn't write measurement '{measurement}' to influxdb: {e}")
 
+
 @masync
 @schedule(5)
 @tor2influx("bandwidth")
@@ -137,6 +144,7 @@ def high_event():
         "bytes_written":    getinfo("traffic/written"),
     }
 
+
 @masync
 @schedule(60)
 @tor2influx("stats")
@@ -145,6 +153,7 @@ def mid_event():
         "idormant":         getinfo("dormant"),
         "liveness":         getinfo("network-liveness"),
     }
+
 
 @masync
 @schedule(60*60)
@@ -157,6 +166,7 @@ def low_event():
         "entry_guards":     getinfo("entry-guards"),
         "iuptime":          getinfo("uptime"),
     }
+
 
 @masync
 @schedule(24*60*60)
@@ -180,7 +190,7 @@ def main():
         exit(1)
 
     influx_client.create_database(db_name)
-#    client.create_retention_policy(name="mine", duration="7d", replication=1)
+#    client.create_retention_policy(name="retention", duration="7d", replication=1, default=true)
 
     try:
         tor_controller = Controller.from_port(address=torcontrol_host, port=torcontrol_port)
@@ -200,4 +210,4 @@ def main():
 try:
     main()
 except KeyboardInterrupt:
-    print("Exit")
+    print("Interrupted!")
