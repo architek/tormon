@@ -118,8 +118,10 @@ def to_influx(measurement, fields):
         'time': get_time()
     }]
     print(f"{get_time()}: {json.dumps(data)}")
-    influx_client.write_points(data, database=db_name)
-
+    try:
+        influx_client.write_points(data, database=db_name)
+    except BaseException as e:
+        print(f"Couldn't write measurement '{measurement}' to influxdb: {e}")
 
 @masync
 @schedule(5)
