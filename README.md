@@ -22,7 +22,7 @@ To start TorMon, you can use docker-compose
 
     docker-compose up -d
 
-If you don't want to use docker, make sure you have python3 and then:
+If you don't want to use docker, make sure you have python3 and pip installed and then:
 
     cd src/
     python3 -m pip install -r requirements.txt
