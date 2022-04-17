@@ -9,6 +9,7 @@ from functools import wraps
 from threading import Thread
 from influxdb import InfluxDBClient
 from stem.control import Controller
+from stem import ControllerError
 
 tor_controller = None
 influx_client = None
@@ -46,6 +47,18 @@ def schedule(interval):
         return wrap
     return decorator
 
+def tor2influx(measurement):
+    def decorator(func):
+        @wraps(func)
+        def wrap(*args, **kwargs):
+            try:
+                fields = func(*args, **kwargs)
+            except ControllerError as e:
+                print(f"Couldn't connect to tor:{e}")
+            else:
+                to_influx(measurement,fields)
+        return wrap
+    return decorator
 
 def get_flags(s):
     res = re.findall("s (.*)\n", s)
@@ -108,7 +121,6 @@ def getinfo(query):
 
     return res
 
-
 def to_influx(measurement, fields):
     tags = m_tags or get_currenc_tags()
     data = [{
@@ -125,53 +137,44 @@ def to_influx(measurement, fields):
 
 @masync
 @schedule(5)
+@tor2influx("bandwidth")
 def high_event():
-    fields = {
+    return {
         "bytes_read":       getinfo("traffic/read"),
         "bytes_written":    getinfo("traffic/written"),
     }
-    to_influx("bandwidth", fields)
-
 
 @masync
 @schedule(60)
+@tor2influx("stats")
 def mid_event():
-    fields = {
+    return {
         "idormant":         getinfo("dormant"),
         "liveness":         getinfo("network-liveness"),
     }
-    to_influx("stats", fields)
-
 
 @masync
 @schedule(60*60)
+@tor2influx("slowstats")
 def low_event():
-    """
-    Tor stats not updated often
-    """
     srv_auth = getinfo(f"ns/id/{fp}")
-    fields = {
+    return {
         "srv_bandwidth":    srv_auth['bandwidth'],
         "srv_flags":        srv_auth['flags'],
         "entry_guards":     getinfo("entry-guards"),
         "iuptime":          getinfo("uptime"),
     }
-    to_influx("slowstats", fields)
-
 
 @masync
 @schedule(24*60*60)
+@tor2influx("conf")
 def verylow_event():
-    """
-    Tor configuration, mostly constants
-    """
-    fields = {
+    return {
         "version":          getinfo("version"),
         "exit_4":           getinfo("exit-policy/ipv4"),
         "exit_6":           getinfo("exit-policy/ipv6"),
         "exit_full":        getinfo("exit-policy/full"),
     }
-    to_influx("conf", fields)
 
 
 def main():
