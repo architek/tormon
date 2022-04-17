@@ -9,6 +9,7 @@ from functools import wraps
 from threading import Thread
 from influxdb import InfluxDBClient
 from stem.control import Controller
+from stem.connection import AuthenticationFailure
 from stem import ControllerError
 
 tor_controller = None
@@ -93,15 +94,7 @@ def getinfo(query):
     See https://github.com/torproject/torspec/blob/main/control-spec.txt
     """
 
-    for i in range(1,11):
-        try:
-            tor_auth()
-        except BaseException:
-            time.sleep(0.2*i)
-        else:
-            break
-    else:
-        raise
+    tor_auth()
 
     resp = tor_controller.get_info(query)
     if query == "network-liveness":
@@ -191,13 +184,11 @@ def main():
 
     try:
         tor_controller = Controller.from_port(address=torcontrol_host, port=torcontrol_port)
-    except Exception as e:
+        tor_auth()
+    except ControllerError as e:
         print(f"Could not connect to tor control on {torcontrol_host}:{torcontrol_port}: {e}")
         exit(2)
-
-    try:
-        tor_auth()
-    except Exception as e:
+    except AuthenticationFailure as e:
         print(f"Could not authenticate on tor controler: {e}")
         exit(3)
 
