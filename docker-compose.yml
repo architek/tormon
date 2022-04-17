@@ -9,3 +9,4 @@ services:
       - .env.torid
     volumes:
       - ./src:/usr/app/src
+      - /etc/localtime:/etc/localtime:ro
