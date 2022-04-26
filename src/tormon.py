@@ -58,6 +58,8 @@ def tor2influx(measurement):
                 fields = func(*args, **kwargs)
             except ControllerError as e:
                 print(f"Couldn't connect to tor:{e}")
+            except AuthenticationFailure as e:
+                print(f"Couldn't authenticate to tor:{e}")
             else:
                 to_influx(measurement,fields)
         return wrap
